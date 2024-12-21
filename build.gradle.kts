@@ -1,4 +1,5 @@
 plugins {
+    `maven-publish`
     kotlin("jvm") version "2.0.21"
 }
 
@@ -16,6 +17,27 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.19.8")
     testImplementation("org.postgresql:postgresql:42.7.2")
     testImplementation(kotlin("test"))
+}
+
+publishing {
+    repositories {
+        maven {
+            val githubUsername = System.getenv("USERNAME")
+            val githubRepository = project.findProperty("gpr.repositoryname") as String
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/$githubUsername/$githubRepository")
+            credentials {
+                username = githubUsername
+                password = System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("gpr") {
+            from(components["java"])
+            artifactId = "com.exposed.pagination"
+        }
+    }
 }
 
 tasks.test {
