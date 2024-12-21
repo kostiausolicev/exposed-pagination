@@ -1,5 +1,5 @@
-import com.wish.paggination.model.PaginationRequest
-import com.wish.paggination.paginate
+import com.exposed.pagination.model.PaginationRequest
+import com.exposed.pagination.paginate
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column

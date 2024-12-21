@@ -1,4 +1,4 @@
-package com.wish.paggination.model
+package com.exposed.pagination.model
 
 @Suppress("UNCHECKED_CAST")
 class PaginationResponse<T>(

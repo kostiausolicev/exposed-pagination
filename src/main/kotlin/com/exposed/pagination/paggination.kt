@@ -1,7 +1,7 @@
-package com.wish.paggination
+package com.exposed.pagination
 
-import com.wish.paggination.model.PaginationRequest
-import com.wish.paggination.model.PaginationResponse
+import com.exposed.pagination.model.PaginationRequest
+import com.exposed.pagination.model.PaginationResponse
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Op

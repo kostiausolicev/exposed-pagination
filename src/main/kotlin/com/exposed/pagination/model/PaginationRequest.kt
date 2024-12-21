@@ -1,4 +1,4 @@
-package com.wish.paggination.model
+package com.exposed.pagination.model
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
