@@ -41,6 +41,6 @@ jobs:
     - name: Publish to GitHub Packages
       run: ./gradlew publish
       env:
-        REPOSITORY: exposed-pagination
+        REPOSITORY: ${{ github.repository }}
         USERNAME: ${{ secrets.GITHUB_ACTOR }}
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
