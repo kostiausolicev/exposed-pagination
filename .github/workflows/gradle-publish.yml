@@ -42,5 +42,5 @@ jobs:
       run: ./gradlew publish
       env:
         REPOSITORY: exposed-pagination
-        USERNAME: kotiausolicev
+        USERNAME: ${{ secrets.GITHUB_ACTOR }}
         TOKEN: ${{ secrets.GITHUB_TOKEN }}

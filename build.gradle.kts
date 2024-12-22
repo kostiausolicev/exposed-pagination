@@ -24,6 +24,8 @@ publishing {
         maven {
             val githubUsername = System.getenv("USERNAME")
             val githubRepository = System.getenv("REPOSITORY")
+            println(githubUsername)
+            println(githubRepository)
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/$githubUsername/$githubRepository")
             credentials {
