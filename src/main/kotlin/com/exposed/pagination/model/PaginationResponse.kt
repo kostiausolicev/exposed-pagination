@@ -1,5 +1,12 @@
 package com.exposed.pagination.model
 
+/**
+ * PaginationResponse
+ * @param content - elements on page
+ * @param page - current page
+ * @param totalPages - total pages
+ * @param isLast - is last
+ */
 @Suppress("UNCHECKED_CAST")
 class PaginationResponse<T>(
     val content: List<T>,
@@ -14,6 +21,9 @@ class PaginationResponse<T>(
         return PaginationResponse(content.map { transform(it as T) }, page, totalPages, page == totalPages)
     }
 
+    /**
+     * Pagination iterator. Make content parameter iterable
+     */
     private class PaginationIterator<T>(
         private val response: PaginationResponse<T>
     ) : Iterator<T> {

@@ -10,6 +10,16 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import kotlin.math.ceil
 
+/**
+ * Paginate implementation.
+ * @param request - pagination request
+ *
+ * @return PaginationResponse with type ResultRow
+ *
+ * @see PaginationRequest
+ * @see PaginationResponse
+ * @see ResultRow
+ */
 fun <T : IdTable<*>> T.paginate(request: PaginationRequest): PaginationResponse<ResultRow> {
     val page = request.page
     val size = request.size
@@ -25,8 +35,18 @@ fun <T : IdTable<*>> T.paginate(request: PaginationRequest): PaginationResponse<
     return PaginationResponse(content, page, totalPages, page == totalPages)
 }
 
-private infix fun Query.applySort(sort: Pair<Expression<*>, SortOrder>?): Query = if (sort != null) {
-    orderBy(sort.first, sort.second)
-} else this
+/**
+ * Function for applying sort
+ * @param sort - pair with a sort field and sort direction
+ *
+ * @see SortOrder
+ * @see Expression
+ */
+private infix fun Query.applySort(sort: Pair<Expression<*>, SortOrder>?): Query = if (sort != null) { orderBy(sort.first, sort.second) } else this
 
+/**
+ * Function for applying filter
+ * @param filter - filter for database query with Op syntax
+ * @see Op
+ */
 private infix fun Query.applyFilter(filter: Op<Boolean>?): Query = if (filter != null) where(filter) else this
