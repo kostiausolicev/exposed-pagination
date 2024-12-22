@@ -1,9 +1,7 @@
 import com.exposed.pagination.model.PaginationRequest
 import com.exposed.pagination.paginate
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SortOrder
@@ -19,6 +17,43 @@ class PaginationTest {
     @Test
     fun `database connection test`() {
         assert(db != null)
+    }
+
+    @Test
+    fun `join filter test`() {
+        val pageSize = 50
+        val paginateRequest = PaginationRequest(listOf(
+            Films.id,
+            Actors.id
+        ), page = 1, size = pageSize, filter = Op.build { Actors.id less 10 })
+        val actors = transaction(db) {
+            Films.join(FilmActors, JoinType.INNER, FilmActors.filmId, Films.id)
+                .join(Actors, JoinType.FULL, FilmActors.actorId, Actors.id)
+                .paginate(paginateRequest)
+        }
+        assert(!actors.isLast)
+        for (f in actors.content) {
+            assert(f[Actors.id].value < 10)
+        }
+    }
+
+    @Test
+    fun `join sort test`() {
+        var actorId = TOTAL_ACTORS
+        val pageSize = 100
+        val paginateRequest = PaginationRequest(listOf(
+            Films.id,
+            Actors.id
+        ), page = 1, size = pageSize, sort = Actors.id to SortOrder.DESC)
+        val actors = transaction(db) {
+            Films.join(FilmActors, JoinType.RIGHT, FilmActors.filmId, Films.id)
+                .join(Actors, JoinType.RIGHT, FilmActors.actorId, Actors.id)
+                .paginate(paginateRequest)
+        }
+        assert(!actors.isLast && actors.content.size == pageSize)
+        for (f in actors.content) {
+            assert(f[Actors.id].value == actorId--)
+        }
     }
 
     @Test
@@ -39,7 +74,7 @@ class PaginationTest {
         }
         val paginateRequest3 = PaginationRequest(Films.columns, page = 3, size = pageSize)
         val paginationResponse3 = transaction(db) { Films.paginate(paginateRequest3) }
-        assert(paginationResponse3.isLast && paginationResponse3.content.size == (TOTAL_ELEMENTS - 2 * pageSize))
+        assert(paginationResponse3.isLast && paginationResponse3.content.size == (TOTAL_FILMS - 2 * pageSize))
         for (f in paginationResponse3.content) {
             assert(f[Films.id].value == id++)
         }
@@ -48,25 +83,25 @@ class PaginationTest {
     @Test
     fun `filter paginate`() {
         val pageSize = 100
-        val filter = Op.build { (Films.id lessEq TOTAL_ELEMENTS) and (Films.id greater TOTAL_ELEMENTS - pageSize * 2) }
+        val filter = Op.build { (Films.id lessEq TOTAL_FILMS) and (Films.id greater TOTAL_FILMS - pageSize * 2) }
         val paginateRequest1 = PaginationRequest(Films.columns, page = 1, size = pageSize, filter = filter)
         val paginationResponse1 = transaction(db) { Films.paginate(paginateRequest1) }
         assert(!paginationResponse1.isLast && paginationResponse1.content.size == pageSize)
-        assert(paginationResponse1.content.all { row -> row[Films.id].value in (TOTAL_ELEMENTS - pageSize * 2)..TOTAL_ELEMENTS }
-                && paginationResponse1.content.last()[Films.id].value == (TOTAL_ELEMENTS - pageSize)
+        assert(paginationResponse1.content.all { row -> row[Films.id].value in (TOTAL_FILMS - pageSize * 2)..TOTAL_FILMS }
+                && paginationResponse1.content.last()[Films.id].value == (TOTAL_FILMS - pageSize)
         )
 
         val paginateRequest2 = PaginationRequest(Films.columns, page = 2, size = pageSize, filter = filter)
         val paginationResponse2 = transaction(db) { Films.paginate(paginateRequest2) }
         assert(paginationResponse2.isLast && paginationResponse2.content.size == pageSize)
-        assert(paginationResponse2.content.all { row -> row[Films.id].value in (TOTAL_ELEMENTS - pageSize * 2)..TOTAL_ELEMENTS }
-                && paginationResponse2.content.last()[Films.id].value == (TOTAL_ELEMENTS)
+        assert(paginationResponse2.content.all { row -> row[Films.id].value in (TOTAL_FILMS - pageSize * 2)..TOTAL_FILMS }
+                && paginationResponse2.content.last()[Films.id].value == (TOTAL_FILMS)
         )
     }
 
     @Test
     fun `sort paginate`() {
-        var id = TOTAL_ELEMENTS
+        var id = TOTAL_FILMS
         val sort = Films.id to SortOrder.DESC
         val pageSize = 499
         val paginateRequest1 = PaginationRequest(Films.columns, page = 1, size = pageSize, sort = sort)
@@ -83,7 +118,7 @@ class PaginationTest {
         }
         val paginateRequest3 = PaginationRequest(Films.columns, page = 3, size = pageSize, sort = sort)
         val paginationResponse3 = transaction(db) { Films.paginate(paginateRequest3) }
-        assert(paginationResponse3.isLast && paginationResponse3.content.size == (TOTAL_ELEMENTS - 2 * pageSize))
+        assert(paginationResponse3.isLast && paginationResponse3.content.size == (TOTAL_FILMS - 2 * pageSize))
         for (f in paginationResponse3.content) {
             assert(f[Films.id].value == id--)
         }
@@ -93,37 +128,33 @@ class PaginationTest {
     fun `sort and filter paginate`() {
         val sort = Films.id to SortOrder.DESC
         val pageSize = 100
-        val filter = Op.build { (Films.id lessEq TOTAL_ELEMENTS) and (Films.id greater TOTAL_ELEMENTS - pageSize * 2) }
+        val filter = Op.build { (Films.id lessEq TOTAL_FILMS) and (Films.id greater TOTAL_FILMS - pageSize * 2) }
         val paginateRequest1 = PaginationRequest(Films.columns, page = 1, size = pageSize, filter = filter, sort = sort)
         val paginationResponse1 = transaction(db) { Films.paginate(paginateRequest1) }
         assert(!paginationResponse1.isLast && paginationResponse1.content.size == pageSize)
-        assert(paginationResponse1.content.all { row -> row[Films.id].value in (TOTAL_ELEMENTS - pageSize * 2)..TOTAL_ELEMENTS }
-                && paginationResponse1.content.last()[Films.id].value == (TOTAL_ELEMENTS - pageSize + 1)
+        assert(paginationResponse1.content.all { row -> row[Films.id].value in (TOTAL_FILMS - pageSize * 2)..TOTAL_FILMS }
+                && paginationResponse1.content.last()[Films.id].value == (TOTAL_FILMS - pageSize + 1)
         )
 
         val paginateRequest2 = PaginationRequest(Films.columns, page = 2, size = pageSize, filter = filter, sort = sort)
         val paginationResponse2 = transaction(db) { Films.paginate(paginateRequest2) }
         assert(paginationResponse2.isLast && paginationResponse2.content.size == pageSize)
-        assert(paginationResponse2.content.all { row -> row[Films.id].value in (TOTAL_ELEMENTS - pageSize * 2)..TOTAL_ELEMENTS }
-                && paginationResponse2.content.last()[Films.id].value == (TOTAL_ELEMENTS - 2 * pageSize + 1)
+        assert(paginationResponse2.content.all { row -> row[Films.id].value in (TOTAL_FILMS - pageSize * 2)..TOTAL_FILMS }
+                && paginationResponse2.content.last()[Films.id].value == (TOTAL_FILMS - 2 * pageSize + 1)
         )
-    }
-
-    object Films : IdTable<Int>("films") {
-        override val id: Column<EntityID<Int>> = integer("id").autoIncrement().entityId()
-        val name = varchar("film_name", 255)
-        val director = varchar("director", 255)
     }
 
     companion object {
         const val FILM_NAME_PREFIX = "FILM_"
         const val DIRECTOR_PREFIX = "DIRECTOR_"
-        const val TOTAL_ELEMENTS = 1000
+        const val TOTAL_FILMS = 1000
+        const val TOTAL_ACTORS = 100
         var db: Database? = null
 
         @BeforeAll
         @JvmStatic
         fun setUpConnection() {
+            var actorId = 1
             var postgres = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
             postgres.start()
             db = Database.connect(
@@ -134,14 +165,31 @@ class PaginationTest {
             )
 
             transaction(db) {
-                SchemaUtils.create(Films)
+                SchemaUtils.create(Films, Actors, FilmActors)
             }
 
             transaction(db) {
-                for (i in 0..(TOTAL_ELEMENTS - 1)) {
+                for (i in 0..(TOTAL_FILMS - 1)) {
                     Films.insert {
                         it[name] = "${FILM_NAME_PREFIX}$i"
                         it[director] = "${DIRECTOR_PREFIX}$i"
+                    }
+                }
+            }
+
+            transaction(db) {
+                for (i in 1..TOTAL_ACTORS) {
+                    Actors.insert {
+                        it[name] = "ACTOR_$actorId"
+                    }
+                }
+            }
+
+            transaction(db) {
+                for (i in 1..TOTAL_ACTORS) {
+                    FilmActors.insert {
+                        it[FilmActors.actorId] = actorId
+                        it[filmId] = i + 2
                     }
                 }
             }
