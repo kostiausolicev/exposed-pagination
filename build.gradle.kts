@@ -36,7 +36,7 @@ publishing {
     publications {
         create<MavenPublication>("gpr") {
             from(components["java"])
-            artifactId = "com.exposed.pagination"
+            artifactId = "pagination"
         }
     }
 }
