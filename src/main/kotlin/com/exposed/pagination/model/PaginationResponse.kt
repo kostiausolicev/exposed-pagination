@@ -13,27 +13,8 @@ class PaginationResponse<T>(
     val page: Long,
     val totalPages: Long,
     val isLast: Boolean
-) : Iterable<T> {
-
-    override fun iterator(): Iterator<T> = PaginationIterator(this)
-
-    fun <T, R> mapContent(transform: (T) -> R): PaginationResponse<R> {
-        return PaginationResponse(content.map { transform(it as T) }, page, totalPages, page == totalPages)
-    }
-
-    /**
-     * Pagination iterator. Make content parameter iterable
-     */
-    private class PaginationIterator<T>(
-        private val response: PaginationResponse<T>
-    ) : Iterator<T> {
-        private var index = 0
-
-        override fun hasNext(): Boolean = index < response.content.size
-
-        override fun next(): T {
-            if (!hasNext()) throw NoSuchElementException()
-            return response.content[index++]
-        }
+) {
+    fun <R> map(transform: (T) -> R): PaginationResponse<R> {
+        return PaginationResponse(content.map(transform), page, totalPages, isLast)
     }
 }
