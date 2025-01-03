@@ -25,16 +25,13 @@ class PaginationTest {
         val paginateRequest = PaginationRequest(listOf(
             Films.id,
             Actors.id
-        ), page = 1, size = pageSize, filter = Op.build { Actors.id less 10 })
+        ), page = 1, size = pageSize, filter = Op.build { Actors.id lessEq 10 })
         val actors = transaction(db) {
             Films.join(FilmActors, JoinType.INNER, FilmActors.filmId, Films.id)
                 .join(Actors, JoinType.FULL, FilmActors.actorId, Actors.id)
                 .paginate(paginateRequest)
         }
-        assert(!actors.isLast)
-        for (f in actors.content) {
-            assert(f[Actors.id].value < 10)
-        }
+        assert(actors.isLast && actors.content.size == 10 && actors.content.all { row -> row[Actors.id].value <= 10 })
     }
 
     @Test
@@ -50,7 +47,7 @@ class PaginationTest {
                 .join(Actors, JoinType.RIGHT, FilmActors.actorId, Actors.id)
                 .paginate(paginateRequest)
         }
-        assert(!actors.isLast && actors.content.size == pageSize)
+        assert(actors.isLast && actors.content.size == pageSize)
         for (f in actors.content) {
             assert(f[Actors.id].value == actorId--)
         }
@@ -188,7 +185,7 @@ class PaginationTest {
             transaction(db) {
                 for (i in 1..TOTAL_ACTORS) {
                     FilmActors.insert {
-                        it[FilmActors.actorId] = actorId
+                        it[FilmActors.actorId] = i
                         it[filmId] = i + 2
                     }
                 }

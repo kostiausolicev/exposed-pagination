@@ -2,7 +2,6 @@ package com.exposed.pagination
 
 import com.exposed.pagination.model.PaginationRequest
 import com.exposed.pagination.model.PaginationResponse
-import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.ColumnSet
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Op
