@@ -3,9 +3,9 @@
 ### pom.xml
 ```xml
 <dependency>
-    <groupId>ru.kosti</groupId>
-    <artifactId>com.exposed.pagination</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.exposed</groupId>
+    <artifactId>pagination</artifactId>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -21,8 +21,39 @@ object Films : IdTable<Int>("films") {
 
 For paginate use syntax:
 ```kotlin
-val paginateRequest = PaginationRequest(Films.columns, page = 1, size = pageSize)
+val paginateRequest = PaginationRequest(Films.columns, page = 1, size = 10)
 val paginationResponse1 = transaction(db) { Films.paginate(paginateRequest) }
+```
+
+Result:
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "film_name": "film_name_1",
+      "director": "film_name_1"
+    }
+  ],
+  "page": 1,
+  "size": 10,
+  "isLast": true
+}
+```
+
+Use sort:
+```kotlin
+val sort = Films.id to SortOrder.DESC
+val paginateRequest = PaginationRequest(Films.columns, page = 1, size = 10, sort = sort)
+val paginationResponse2 = transaction(db) { Films.paginate(paginateRequest) }
+```
+
+Use filter:
+```kotlin
+val filter = Op.build {  }
+val paginateRequest = PaginationRequest(Films.columns, page = 1, size = 10, filter = filter)
+val paginationResponse2 = transaction(db) { Films.paginate(paginateRequest) }
 ```
 
 All paginate request should be called in transactional context
